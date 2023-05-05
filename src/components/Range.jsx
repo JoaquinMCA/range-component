@@ -3,11 +3,11 @@ import { useCurrency } from "../hooks/useCurrency";
 
 /**
  * Range component to select using bullets a min and a max value from an interval.
- * 
+ *
  * Two modes are posible:
  *  - Min and max values are given (and are editable by the user).
  *  - All the possible values are given (and are not editable by the user).
- * 
+ *
  * Config object passed as prop is available with the following properties:
  *  - min: smallest available value
  *  - max: greatest available value
@@ -16,7 +16,7 @@ import { useCurrency } from "../hooks/useCurrency";
  *  - showMaxSelectedValue: show/hide the selected max value
  *  - showStepTicks: show/hide the step marks
  *  - showStepLabels: show/hide the step numeric labels
- * 
+ *
  * Min and max values can be selected by dragging the bullets and using the arrow keys (a bullet has to be dragged before the arrow keys are available).
  */
 export function Range(props) {
@@ -44,7 +44,7 @@ export function Range(props) {
   const [selectedMax, setSelectedMax] = useState(100);
   const [selectedBullet, setSelectedBullet] = useState(null);
   const [lastSelectedBullet, setLastSelectedBullet] = useState(null);
-  
+
   const [minBulletPosition, setMinBulletPosition] = useState(0);
   const [maxBulletPosition, setMaxBulletPosition] = useState(0);
 
