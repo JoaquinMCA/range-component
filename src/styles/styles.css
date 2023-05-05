@@ -1,0 +1,63 @@
+.range-container {
+  width: 400px;
+  height: 200px;
+  border: 1px solid gray;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-flow: row wrap;
+  position: relative;
+}
+
+.range-line {
+  width: 100%;
+  height: 8px;
+  background-color: black;
+  display: flex;
+  align-items: center;
+}
+
+.range-line-changing {
+  opacity: 0.7;
+}
+
+.bullet {
+  background-color: black;
+  border-radius: 50%;
+}
+
+.bullet:hover {
+  transform: scale(1.2);
+  cursor: grab;
+  background-color: darkgray;
+}
+
+.bullet-dragging {
+  transform: scale(1.2);
+  cursor: grabbing !important;
+  background-color: darkgray;
+}
+.bullet-dragging:hover {
+  cursor: grabbing;
+}
+
+.debug {
+  width: 100%;
+  position: absolute;
+  top: 500px;
+}
+
+.step {
+  position: relative;
+  height: 10px;
+  border-right: 1px solid black;
+  border-left: 1px solid black;
+  z-index: -99;
+}
+
+.step-number {
+  font-size: 1rem;
+  position: absolute;
+  top: 1rem;
+  right: 0;
+}
