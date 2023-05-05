@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useCurrency } from "../hooks/useCurrency";
 
 export function Range(props) {
   const bulletSize = 24;
   const [min, setMin] = useState(props.config.min ?? 1);
   const [max, setMax] = useState(props.config.max ?? 10);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(props.config.step ?? 1);
   const [posibleValues, setPosibleValues] = useState([]);
   const [stepLength, setStepLength] = useState(null);
   const [minMaxVariable, setMinMaxVariable] = useState(true);
@@ -34,30 +35,22 @@ export function Range(props) {
   const rangeLine = useRef();
 
   useEffect(() => {
-    console.log("re-render");
-    console.log(props.config);
-    console.log(props.config.min);
-    console.log(props.config.max);
     if (
       !props.config.minInput ||
       (!props.config.maxInput && props.config.possibleValuesInput)
     ) {
+      // TODO given possibleValues
       // setMin(config.possibleValuesInput[0]);
       // setMax(config.possibleValuesInput[config.possibleValuesInput.length - 1]);
     }
   }, []);
 
   useEffect(() => {
-    console.log("efect de setPosible values");
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    // console.log("initial");
-    // console.log(lineBoundingClientRect);
     setPosibleValues(calculateSteps());
   }, [min, max]);
 
   useEffect(() => {
-    console.log("efect de setMin setMax");
-    console.log(posibleValues);
     if (posibleValues?.length > 0) {
       const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
       const stepLenght =
@@ -72,13 +65,6 @@ export function Range(props) {
     setMinValues(0);
     setMaxValues(lineBoundingClientRect.width);
   }, [stepLength]);
-
-  //   function calculateStepLenght() {
-  //     console.log("----calculateStepLenght-----");
-  //     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-  //     console.log("posibleValues length! ", posibleValues.length);
-  //     return Math.floor(lineBoundingClientRect.width / posibleValues.length);
-  //   }
 
   useEffect(() => {
     window.addEventListener("mouseup", manageMouseUp, true);
@@ -96,8 +82,6 @@ export function Range(props) {
 
   function manageMouseMove(e) {
     if (selectedBullet && e) {
-      console.log("seteo position mouse move");
-
       const movement = calcBulletPosition(e);
       selectedBullet === "min-bullet";
       selectedBullet === "min-bullet"
@@ -107,13 +91,7 @@ export function Range(props) {
   }
 
   function bulletClicked(ev, bullet) {
-    console.log("bulletClicked!");
-    console.log(ev);
-    console.log(ev);
-
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    console.log(lineBoundingClientRect.clientX);
-    console.log(ev.clientX, ev.clientY);
     setSelectedBullet(bullet);
     setLastSelectedBullet(bullet);
     const elem = document.getElementById("app");
@@ -123,12 +101,7 @@ export function Range(props) {
   }
 
   function manageMouseUp(e) {
-    // e.preventDefault();
-    // e.stopPropagation();
-    // // console.log("mouse up windoweee");
-    // // console.log("selectedBullet: ", selectedBullet);
     if (selectedBullet && e) {
-      console.log("hay selected bulleT");
       const movement = calcBulletPosition(e);
       selectedBullet === "min-bullet"
         ? setMinValues(movement)
@@ -143,16 +116,13 @@ export function Range(props) {
 
   function setMinValues(movement) {
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-
     const minIndex = calculateStepForMovement(movement);
-    console.log(minIndex);
     setSelectedMin(posibleValues[minIndex]);
     setMinBulletPosition(minIndex * stepLength);
   }
 
   function setMaxValues(movement) {
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-
     const maxIndex = calculateStepForMovement(movement);
     setSelectedMax(posibleValues[maxIndex]);
     setMaxBulletPosition(maxIndex * stepLength);
@@ -170,11 +140,6 @@ export function Range(props) {
       position = lineBoundingClientRect.width;
     }
 
-    console.log("calc bullet movement");
-    console.log(lineBoundingClientRect.width);
-    console.log(lineBoundingClientRect);
-    console.log(e.clientX - lineBoundingClientRect.left);
-    console.log(position);
     if (selectedBullet === "min-bullet") {
       // min < max
       if (position > maxBulletPosition - stepLength) {
@@ -186,13 +151,11 @@ export function Range(props) {
         position = minBulletPosition + stepLength;
       }
     }
-    // console.log(`position ${position}`);
-    // console.log(`minBulletPosition ${minBulletPosition}`);
-    // console.log(`maxBulletPosition ${maxBulletPosition}`);
     return position;
   }
 
   function calculateSteps() {
+    // const range = props.config.currencyMode ? (max - min) * 100 : max - min;
     const range = max - min;
     const numberOfSteps = Math.floor(range / step);
     const posibleValues = [+min];
@@ -202,52 +165,41 @@ export function Range(props) {
     if (range / step - Math.floor(range / step) > 0) {
       posibleValues.push(+max);
     }
-    console.log("posible values: ", posibleValues.toString());
     return posibleValues;
   }
 
   function calculateStepForMovement(movement) {
-    // console.log("calculateStepForPosition");
-    // console.log("stepLength: ", stepLength);
-    // console.log("movement: ", movement);
-
     if (stepLength) {
       const nonDecimal = +Math.floor(movement / stepLength);
       const decimal =
         movement / stepLength - Math.floor(movement / stepLength) >= 0.5
           ? +1
           : +0;
-
       const stepIndex = nonDecimal + decimal;
-
-      // console.log("-------->nonDecimal: ", nonDecimal);
-      // console.log("-------->decimal: ", decimal);
-      // console.log("-------->stepIndex: ", stepIndex);
       return +stepIndex;
     }
   }
 
   function minInputHandler(event) {
-    if (event.target.value !== min) {
-      if (event.target.value < 0) {
-        console.log("set min 0");
+    let newValue = event?.target?.value;
+    if (newValue !== min) {
+      if (newValue < 0) {
         setMin(0);
-      } else if (event.target.value > max) {
-        console.log("set min max - 1");
+      } else if (newValue > max) {
         setMin(max - 1);
       } else {
-        console.log("set min lo que sea");
-        setMin(event.target.value);
+        console.log("set min: ", newValue);
+        setMin(newValue);
       }
     }
   }
 
   function maxInputHandler(event) {
-    console.log("max input handler: ", event.target.value);
-    if (event.target.value < min) {
+    let newValue = event?.target?.value;
+    if (newValue < min) {
       setMax(min + 1);
     } else {
-      setMax(event.target.value);
+      setMax(newValue);
     }
   }
 
@@ -273,7 +225,7 @@ export function Range(props) {
         >
           <div
             className={
-              "bullet " +
+              "bullet bullet-on-top " +
               (selectedBullet === "min-bullet" ? "bullet-dragging" : "")
             }
             id="min-bullet"
@@ -287,7 +239,11 @@ export function Range(props) {
             }}
           >
             {showMinSelectedValue && (
-              <div className="bullet-value">{selectedMin}</div>
+              <div className="bullet-value">
+                {props.config.currencyMode
+                  ? useCurrency(selectedMin)
+                  : selectedMin}
+              </div>
             )}
           </div>
           <div
@@ -306,7 +262,12 @@ export function Range(props) {
             }}
           >
             {showMaxSelectedValue && (
-              <div className="bullet-value">{selectedMax}</div>
+              <div className="bullet-value-max ">
+                {" "}
+                {props.config.currencyMode
+                  ? useCurrency(selectedMax)
+                  : selectedMax}
+              </div>
             )}
           </div>
           {showStepTicks && (

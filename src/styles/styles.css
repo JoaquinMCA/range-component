@@ -22,6 +22,16 @@
   left: 6px;
 }
 
+.bullet-value-max {
+  position: absolute;
+  bottom: -32px;
+  left: 6px;
+}
+
+.bullet-on-top {
+  z-index: 99;
+}
+
 .range-line-container {
   width: calc(100% - 266px);
   display: flex;
