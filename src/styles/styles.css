@@ -1,7 +1,29 @@
 .range-container {
-  width: 400px;
-  height: 200px;
-  border: 1px solid gray;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-flow: row;
+}
+
+.min-max-container {
+  width: 100px;
+  display: flex;
+}
+
+.min-max-container > input {
+  width: 100%;
+}
+
+.bullet-value {
+  position: absolute;
+  bottom: -18px;
+  left: 6px;
+}
+
+.range-line-container {
+  width: calc(100% - 266px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,13 +51,11 @@
 .bullet:hover {
   transform: scale(1.2);
   cursor: grab;
-  background-color: darkgray;
 }
 
 .bullet-dragging {
   transform: scale(1.2);
   cursor: grabbing !important;
-  background-color: darkgray;
 }
 .bullet-dragging:hover {
   cursor: grabbing;
