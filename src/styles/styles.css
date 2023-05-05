@@ -5,6 +5,7 @@
   justify-content: center;
   gap: 16px;
   flex-flow: row;
+  padding: 36px 0;
 }
 
 .min-max-container {
@@ -59,12 +60,12 @@
 }
 
 .bullet:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
   cursor: grab;
 }
 
 .bullet-dragging {
-  transform: scale(1.2);
+  transform: scale(1.1);
   cursor: grabbing !important;
 }
 .bullet-dragging:hover {
