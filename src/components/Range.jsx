@@ -82,7 +82,6 @@ export function Range(props) {
       const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
       const stepLenght =
         +lineBoundingClientRect.width / +(posibleValues.length - 1);
-
       setStepLength(stepLenght);
     }
   }, [posibleValues]);
@@ -144,7 +143,7 @@ export function Range(props) {
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
     setMinValues(0);
     setMaxValues(lineBoundingClientRect.width);
-  }, [stepLength]);
+  }, [stepLength, posibleValues]);
 
   /**
    * Listen to mouse up and mouse move events to move the bullets and "drop" them.
@@ -454,7 +453,6 @@ export function Range(props) {
           >
             {showMaxSelectedValue && (
               <div className="bullet-value-max ">
-                {" "}
                 {props.config.currencyMode
                   ? useCurrency(selectedMax)
                   : selectedMax}
