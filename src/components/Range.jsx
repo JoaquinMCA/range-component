@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCurrency } from "../hooks/useCurrency";
 
 /**
@@ -88,6 +88,56 @@ export function Range(props) {
   }, [posibleValues]);
 
   /**
+   * Calculates the step in wich a bullet has to be for a mouse movement.
+   *
+   * @param movement in pixels
+   */
+  const calculateStepForMovement = useCallback(
+    (movement) => {
+      if (stepLength) {
+        const nonDecimal = +Math.floor(movement / stepLength);
+        const decimal =
+          movement / stepLength - Math.floor(movement / stepLength) >= 0.5
+            ? +1
+            : +0;
+        const stepIndex = nonDecimal + decimal;
+        return +stepIndex;
+      }
+    },
+    [stepLength]
+  );
+
+  /**
+   * Sets the selected min value and the min bullet position.
+   *
+   * @param event movement in px
+   */
+  const setMinValues = useCallback(
+    (movement) => {
+      const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
+      const minIndex = calculateStepForMovement(movement);
+      setSelectedMin(posibleValues[minIndex]);
+      setMinBulletPosition(minIndex * stepLength);
+    },
+    [posibleValues, stepLength, calculateStepForMovement]
+  );
+
+  /**
+   * Sets the selected max value and the max bullet position.
+   *
+   * @param event movement in px
+   */
+  const setMaxValues = useCallback(
+    (movement) => {
+      const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
+      const maxIndex = calculateStepForMovement(movement);
+      setSelectedMax(posibleValues[maxIndex]);
+      setMaxBulletPosition(maxIndex * stepLength);
+    },
+    [posibleValues, stepLength, calculateStepForMovement]
+  );
+
+  /**
    * Calculate the min and max values and positions.
    */
   useEffect(() => {
@@ -108,6 +158,213 @@ export function Range(props) {
     };
   }, [selectedBullet]);
 
+  /**
+   * Calculates the exact position of a bullet matching a step.
+   * Controls that the min and max bullet cannot cross or leave the range interval.
+   *
+   * @param event mouse event
+   */
+  const calcBulletPosition = useCallback(
+    (e) => {
+      const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
+      let position = e.clientX - lineBoundingClientRect.left;
+      // min value
+      if (position < 0) {
+        position = 0;
+      }
+      // max value
+      if (position > lineBoundingClientRect.width) {
+        position = lineBoundingClientRect.width;
+      }
+
+      if (selectedBullet === "min-bullet") {
+        // min < max
+        if (position > maxBulletPosition - stepLength) {
+          position = maxBulletPosition - stepLength;
+        }
+      } else {
+        // max > min
+        if (position < minBulletPosition + stepLength) {
+          position = minBulletPosition + stepLength;
+        }
+      }
+      return position;
+    },
+    [selectedBullet, maxBulletPosition, minBulletPosition, stepLength]
+  );
+
+  /**
+   * Controls mouse movement to move the bullets accordingly.
+   */
+  const manageMouseMove = useCallback(
+    (e) => {
+      if (selectedBullet && e) {
+        const movement = calcBulletPosition(e);
+        selectedBullet === "min-bullet";
+        selectedBullet === "min-bullet"
+          ? setMinValues(movement)
+          : setMaxValues(movement);
+      }
+    },
+    [calcBulletPosition, setMinValues, setMaxValues]
+  );
+
+  /**
+   * Selects a bullet.
+   */
+  const bulletClicked = useCallback((ev, bullet) => {
+    const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
+    setSelectedBullet(bullet);
+    setLastSelectedBullet(bullet);
+    const elem = document.getElementById("app");
+    if (elem) {
+      elem.style.cursor = "grabbing";
+    }
+  }, []);
+
+  /**
+   * Releases the bullets.
+   */
+  const manageMouseUp = useCallback(
+    (e) => {
+      if (selectedBullet && e) {
+        const movement = calcBulletPosition(e);
+        selectedBullet === "min-bullet"
+          ? setMinValues(movement)
+          : setMaxValues(movement);
+        setSelectedBullet(null);
+        const elem = document.getElementById("app");
+        if (elem) {
+          elem.style.cursor = "default";
+        }
+      }
+    },
+    [selectedBullet, calcBulletPosition]
+  );
+
+  /**
+   * Goes to the previous (smaller) possible value (triggered by arrow keys down and left).
+   *
+   * @param last moved bullet
+   */
+  const goPreviousValue = useCallback(
+    (bullet) => {
+      if (bullet === "min-bullet") {
+        let index = posibleValues.findIndex((x) => x === selectedMin);
+        index = index - 1 < 0 ? 0 : index - 1;
+        setSelectedMin(posibleValues[index]);
+        setMinBulletPosition(index * stepLength);
+      } else if (bullet === "max-bullet") {
+        let index = posibleValues.findIndex((x) => x === selectedMax);
+        index = index - 1 < 0 ? 0 : index - 1;
+        setSelectedMax(posibleValues[index]);
+        setMaxBulletPosition(index * stepLength);
+      }
+    },
+    [posibleValues, selectedMin]
+  );
+
+  /**
+   * Goes to the next (greater) possible value (triggered by arrow keys right and up).
+   *
+   * @param last moved bullet
+   */
+  const goNextValue = useCallback(
+    (bullet) => {
+      if (bullet === "min-bullet") {
+        let index = posibleValues.findIndex((x) => x === selectedMin);
+        index =
+          index + 1 > posibleValues.length - 1
+            ? posibleValues.length - 1
+            : index + 1;
+        setSelectedMin(posibleValues[index]);
+        setMinBulletPosition(index * stepLength);
+      } else if (bullet === "max-bullet") {
+        let index = posibleValues.findIndex((x) => x === selectedMax);
+        index =
+          index + 1 > posibleValues.length - 1
+            ? posibleValues.length - 1
+            : index + 1;
+        setSelectedMax(posibleValues[index]);
+        setMaxBulletPosition(index * stepLength);
+      }
+    },
+    [posibleValues, selectedMin, stepLength]
+  );
+
+  /**
+   * Controls arrow keys pressing.
+   */
+  const manageKeyDown = useCallback(
+    (e) => {
+      if (e.key === "ArrowUp" || e.key === "ArrowRight") {
+        goNextValue(lastSelectedBullet);
+      } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
+        goPreviousValue(lastSelectedBullet);
+      }
+    },
+    [goNextValue, goPreviousValue, lastSelectedBullet]
+  );
+
+  /**
+   * Calculates all the steps between the min and max values.
+   */
+  const calculateSteps = useCallback(() => {
+    const range = max - min;
+    const numberOfSteps = Math.floor(range / step);
+    const posibleValues = [+min];
+    for (let i = 1; i <= numberOfSteps; i++) {
+      posibleValues.push(+min + i * step);
+    }
+    if (range / step - Math.floor(range / step) > 0) {
+      posibleValues.push(+max);
+    }
+    return posibleValues;
+  }, [min, max, step]);
+
+  /**
+   * Controls the new min input.
+   * Min can't be greather than the max.
+   * Min can't be smaller than the first possible value.
+   *
+   * @param event input change event
+   */
+  const minInputHandler = useCallback(
+    (event) => {
+      let newValue = event?.target?.value;
+      if (newValue !== min) {
+        if (newValue < 0) {
+          setMin(0);
+        } else if (newValue > max) {
+          setMin(max - 1);
+        } else {
+          setMin(newValue);
+        }
+      }
+    },
+    [min, max]
+  );
+
+  /**
+   * Controls the new max input.
+   * Max can't be smaller than the min.
+   * Max can't be greater than the last possible value.
+   *
+   * @param event input change event
+   */
+  const maxInputHandler = useCallback(
+    (event) => {
+      let newValue = event?.target?.value;
+      if (newValue < min) {
+        setMax(min + 1);
+      } else {
+        setMax(newValue);
+      }
+    },
+    [min]
+  );
+
+  // KEYBOARD ARRROWS LOGIC
   /**
    * Listen to the arrow key events to move the last moved bullet.
    */
@@ -135,232 +392,9 @@ export function Range(props) {
   /**
    * Clears listeners.
    */
-  function clearKeyListeners() {
+  const clearKeyListeners = useCallback(() => {
     window.removeEventListener("keydown", manageKeyDown, true);
-  }
-
-  /**
-   * Controls mouse movement to move the bullets accordingly.
-   */
-  function manageMouseMove(e) {
-    if (selectedBullet && e) {
-      const movement = calcBulletPosition(e);
-      selectedBullet === "min-bullet";
-      selectedBullet === "min-bullet"
-        ? setMinValues(movement)
-        : setMaxValues(movement);
-    }
-  }
-
-  /**
-   * Selects a bullet.
-   */
-  function bulletClicked(ev, bullet) {
-    const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    setSelectedBullet(bullet);
-    setLastSelectedBullet(bullet);
-    const elem = document.getElementById("app");
-    if (elem) {
-      elem.style.cursor = "grabbing";
-    }
-  }
-
-  /**
-   * Releases the bullets.
-   */
-  function manageMouseUp(e) {
-    if (selectedBullet && e) {
-      const movement = calcBulletPosition(e);
-      selectedBullet === "min-bullet"
-        ? setMinValues(movement)
-        : setMaxValues(movement);
-      setSelectedBullet(null);
-      const elem = document.getElementById("app");
-      if (elem) {
-        elem.style.cursor = "default";
-      }
-    }
-  }
-
-  /**
-   * Controls arrow keys pressing.
-   */
-  function manageKeyDown(e) {
-    if (e.key === "ArrowUp" || e.key === "ArrowRight") {
-      goNextValue(lastSelectedBullet);
-    } else if (e.key === "ArrowDown" || e.key === "ArrowLeft") {
-      goPreviousValue(lastSelectedBullet);
-    }
-  }
-
-  /**
-   * Goes to the previous (smaller) possible value (triggered by arrow keys down and left).
-   *
-   * @param last moved bullet
-   */
-  function goPreviousValue(bullet) {
-    if (bullet === "min-bullet") {
-      let index = posibleValues.findIndex((x) => x === selectedMin);
-      index = index - 1 < 0 ? 0 : index - 1;
-      setSelectedMin(posibleValues[index]);
-      setMinBulletPosition(index * stepLength);
-    } else if (bullet === "max-bullet") {
-      let index = posibleValues.findIndex((x) => x === selectedMax);
-      index = index - 1 < 0 ? 0 : index - 1;
-      setSelectedMax(posibleValues[index]);
-      setMaxBulletPosition(index * stepLength);
-    }
-  }
-
-  /**
-   * Goes to the next (greater) possible value (triggered by arrow keys right and up).
-   *
-   * @param last moved bullet
-   */
-  function goNextValue(bullet) {
-    if (bullet === "min-bullet") {
-      let index = posibleValues.findIndex((x) => x === selectedMin);
-      index =
-        index + 1 > posibleValues.length - 1
-          ? posibleValues.length - 1
-          : index + 1;
-      setSelectedMin(posibleValues[index]);
-      setMinBulletPosition(index * stepLength);
-    } else if (bullet === "max-bullet") {
-      let index = posibleValues.findIndex((x) => x === selectedMax);
-      index =
-        index + 1 > posibleValues.length - 1
-          ? posibleValues.length - 1
-          : index + 1;
-      setSelectedMax(posibleValues[index]);
-      setMaxBulletPosition(index * stepLength);
-    }
-  }
-
-  /**
-   * Sets the selected min value and the min bullet position.
-   *
-   * @param event movement in px
-   */
-  function setMinValues(movement) {
-    const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    const minIndex = calculateStepForMovement(movement);
-    setSelectedMin(posibleValues[minIndex]);
-    setMinBulletPosition(minIndex * stepLength);
-  }
-
-  /**
-   * Sets the selected max value and the max bullet position.
-   *
-   * @param event movement in px
-   */
-  function setMaxValues(movement) {
-    const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    const maxIndex = calculateStepForMovement(movement);
-    setSelectedMax(posibleValues[maxIndex]);
-    setMaxBulletPosition(maxIndex * stepLength);
-  }
-
-  /**
-   * Calculates the exact position of a bullet matching a step.
-   * Controls that the min and max bullet cannot cross or leave the range interval.
-   *
-   * @param event mouse event
-   */
-  function calcBulletPosition(e) {
-    const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-    let position = e.clientX - lineBoundingClientRect.left;
-    // min value
-    if (position < 0) {
-      position = 0;
-    }
-    // max value
-    if (position > lineBoundingClientRect.width) {
-      position = lineBoundingClientRect.width;
-    }
-
-    if (selectedBullet === "min-bullet") {
-      // min < max
-      if (position > maxBulletPosition - stepLength) {
-        position = maxBulletPosition - stepLength;
-      }
-    } else {
-      // max > min
-      if (position < minBulletPosition + stepLength) {
-        position = minBulletPosition + stepLength;
-      }
-    }
-    return position;
-  }
-
-  /**
-   * Calculates all the steps between the min and max values.
-   */
-  function calculateSteps() {
-    const range = max - min;
-    const numberOfSteps = Math.floor(range / step);
-    const posibleValues = [+min];
-    for (let i = 1; i <= numberOfSteps; i++) {
-      posibleValues.push(+min + i * step);
-    }
-    if (range / step - Math.floor(range / step) > 0) {
-      posibleValues.push(+max);
-    }
-    return posibleValues;
-  }
-
-  /**
-   * Calculates the step in wich a bullet has to be for a mouse movement.
-   *
-   * @param movement in pixels
-   */
-  function calculateStepForMovement(movement) {
-    if (stepLength) {
-      const nonDecimal = +Math.floor(movement / stepLength);
-      const decimal =
-        movement / stepLength - Math.floor(movement / stepLength) >= 0.5
-          ? +1
-          : +0;
-      const stepIndex = nonDecimal + decimal;
-      return +stepIndex;
-    }
-  }
-
-  /**
-   * Controls the new min input.
-   * Min can't be greather than the max.
-   * Min can't be smaller than the first possible value.
-   *
-   * @param event input change event
-   */
-  function minInputHandler(event) {
-    let newValue = event?.target?.value;
-    if (newValue !== min) {
-      if (newValue < 0) {
-        setMin(0);
-      } else if (newValue > max) {
-        setMin(max - 1);
-      } else {
-        setMin(newValue);
-      }
-    }
-  }
-
-  /**
-   * Controls the new max input.
-   * Max can't be smaller than the min.
-   * Max can't be greater than the last possible value.
-   *
-   * @param event input change event
-   */
-  function maxInputHandler(event) {
-    let newValue = event?.target?.value;
-    if (newValue < min) {
-      setMax(min + 1);
-    } else {
-      setMax(newValue);
-    }
-  }
+  }, [manageKeyDown]);
 
   return (
     <div className="range-container" ref={rangeContainer}>
