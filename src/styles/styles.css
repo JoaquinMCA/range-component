@@ -57,6 +57,7 @@
 .bullet {
   background-color: black;
   border-radius: 50%;
+  transition: left 0.1s linear, width 0.5s linear, height 0.5s linear;
 }
 
 .bullet:hover {
@@ -87,8 +88,9 @@
 }
 
 .step-number {
-  font-size: 1rem;
+  font-size: 0.6rem;
   position: absolute;
-  top: 1rem;
-  right: 0;
+  top: -24px;
+  left: 5px;
+  transform: rotate(-30deg);
 }

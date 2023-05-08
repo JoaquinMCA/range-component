@@ -38,14 +38,12 @@ describe("Range component", () => {
       expect(rightBullet.textContent).toEqual(selectedMaxText);
     });
 
-    test("Renders to bullets with the default config, initial min and max selected", async () => {
+    test("If no min, max or values are passed inside config, check error", async () => {
+      const errorSpy = vi.spyOn(console, "error");  
       const { leftBullet, rightBullet } = setup({});
-
-      const selectedMinText = "1";
-      expect(leftBullet.textContent).toEqual(selectedMinText);
-
-      const selectedMaxText = "10";
-      expect(rightBullet.textContent).toEqual(selectedMaxText);
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Either min and max or values have to be passed as part of the config."
+      );
     });
 
     test("Change min input", async () => {

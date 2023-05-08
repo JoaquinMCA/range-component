@@ -4,7 +4,7 @@ import { useCurrency } from "../hooks/useCurrency";
 /**
  * Range component to select using bullets a min and a max value from an interval.
  *
- * Two modes are posible:
+ * Two modes are available:
  *  - Min and max values are given (and are editable by the user).
  *  - All the possible values are given (and are not editable by the user).
  *
@@ -21,11 +21,12 @@ import { useCurrency } from "../hooks/useCurrency";
  */
 export function Range(props) {
   const bulletSize = 24;
-  const [min, setMin] = useState(props.config.min ?? 1);
-  const [max, setMax] = useState(props.config.max ?? 10);
-  const [step, setStep] = useState(props.config.step ?? 1);
-  const [posibleValues, setPosibleValues] = useState([]);
-  const [stepLength, setStepLength] = useState(null);
+  const [min, setMin] = useState("");
+  const [max, setMax] = useState("");
+  const [step, setStep] = useState("");
+  const [possibleValues, setPossibleValues] = useState([]);
+  const [stepLength, setStepLength] = useState("");
+  const [stepLengths, setStepLengths] = useState([]);
   const [minMaxVariable, setMinMaxVariable] = useState(true);
   const [showMinSelectedValue, setShowMinSelectedValue] = useState(
     props.config.showMinSelectedValue ?? true
@@ -53,38 +54,113 @@ export function Range(props) {
   const rangeLine = useRef();
   const rangeContainer = useRef();
 
-  /**
-   *
-   */
-  useEffect(() => {
-    if (
-      !props.config.minInput ||
-      (!props.config.maxInput && props.config.possibleValuesInput)
-    ) {
-      // TODO given possibleValues
-      // setMin(config.possibleValuesInput[0]);
-      // setMax(config.possibleValuesInput[config.possibleValuesInput.length - 1]);
+  const initialSetup = useCallback(() => {
+    // Set default values if needed
+    if (props.config.min || props.config.min === 0) {
+      setMin(props.config.min);
+    } else {
+      setMin(1);
+    }
+
+    if (props.config.max || props.config.max === 0) {
+      setMax(props.config.max);
+    } else {
+      setMax(10);
+    }
+
+    if (props.config.values) {
+      setMinMaxVariable(false);
+      // Sort values from min to max and remove non number elements
+      const values = props.config.values
+        .sort(function (a, b) {
+          return a - b;
+        })
+        .filter((x) => {
+          return typeof x === "number";
+        });
+      const minFromValues = values[0];
+      const maxFromValues = values[values.length - 1];
+      setPossibleValues(values);
+      setMin(minFromValues);
+      setMax(maxFromValues);
+    }
+
+    if (props.config.step) {
+      setStep(props.config.step);
+    } else {
+      setStep(props.config.currencyMode ? +0.01 : +1);
     }
   }, []);
 
   /**
-   * Calculate the posible values when the min or max values change.
+   * Initial setup, defaults and error if wrong config prop is received.
    */
   useEffect(() => {
-    setPosibleValues(calculateSteps());
-  }, [min, max]);
+    if ((!props.config.min || !props.config.max) && !props.config.values) {
+      console.error(
+        "Either min and max or values have to be passed as part of the config."
+      );
+    } else {
+      initialSetup();
+    }
+  }, []);
+
+  /**
+   * Calculate the possible values when the min or max values change.
+   */
+  useEffect(() => {
+    if (props.config.min && props.config.max) {
+      setPossibleValues(calculateSteps(min, max, step));
+    }
+  }, [min, max, step]);
 
   /**
    * Calculates the step lenght.
    */
   useEffect(() => {
-    if (posibleValues?.length > 0) {
+    if (possibleValues?.length > 0) {
       const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-      const stepLenght =
-        +lineBoundingClientRect.width / +(posibleValues.length - 1);
-      setStepLength(stepLenght);
+      const unitaryStepLength =
+        +lineBoundingClientRect.width / +(possibleValues.length - 1);
+
+      if (!props.config.values) {
+        setStepLength(unitaryStepLength);
+        const stepLengths = [];
+        possibleValues.map((x) => {
+          stepLengths.push(unitaryStepLength);
+        });
+        setStepLengths(stepLengths);
+      } else {
+        const stepLengths = [];
+        const relation =
+          +lineBoundingClientRect.width /
+          (possibleValues[possibleValues.length - 1] - possibleValues[0]);
+
+        for (let i = 1; i < possibleValues.length; i++) {
+          stepLengths.push(
+            (possibleValues[i] - possibleValues[i - 1]) * relation
+          );
+        }
+        setStepLengths(stepLengths);
+      }
     }
-  }, [posibleValues]);
+  }, [possibleValues]);
+
+  /**
+   * Calculates the step lengths when an array of fixed values is given.
+   */
+  const calculateFixedStepsLength = useCallback((values) => {}, []);
+
+  const calculatePosition = useCallback(
+    (index) => {
+      let totalLength = 0;
+      for (let i = 0; i < index; i++) {
+        totalLength += stepLengths[i];
+      }
+      return totalLength;
+    },
+    [stepLengths]
+  );
 
   /**
    * Calculates the step in wich a bullet has to be for a mouse movement.
@@ -93,17 +169,36 @@ export function Range(props) {
    */
   const calculateStepForMovement = useCallback(
     (movement) => {
-      if (stepLength) {
-        const nonDecimal = +Math.floor(movement / stepLength);
-        const decimal =
-          movement / stepLength - Math.floor(movement / stepLength) >= 0.5
-            ? +1
-            : +0;
-        const stepIndex = nonDecimal + decimal;
-        return +stepIndex;
+      let prevStepIndex = 0;
+      let nextStepIndex = 0;
+      let accLength = 0;
+      if (movement === 0 || stepLengths.length === 0) {
+        return 0;
+      }
+      for (let i = 0; i < possibleValues.length; i++) {
+        if (accLength >= movement) {
+          nextStepIndex = i;
+          break;
+        } else {
+          prevStepIndex = i;
+          if (i < possibleValues.length - 1) {
+            nextStepIndex = i + 1;
+            accLength += stepLengths[i];
+          }
+        }
+      }
+
+      // Check which is closer
+      if (
+        movement - calculatePosition(prevStepIndex) <
+        calculatePosition(nextStepIndex) - movement
+      ) {
+        return +prevStepIndex;
+      } else {
+        return +nextStepIndex;
       }
     },
-    [stepLength]
+    [possibleValues, stepLengths, calculatePosition]
   );
 
   /**
@@ -114,11 +209,24 @@ export function Range(props) {
   const setMinValues = useCallback(
     (movement) => {
       const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-      const minIndex = calculateStepForMovement(movement);
-      setSelectedMin(posibleValues[minIndex]);
-      setMinBulletPosition(minIndex * stepLength);
+      let minIndex = calculateStepForMovement(movement);
+      if (selectedMax && possibleValues[minIndex] >= selectedMax) {
+        minIndex -= 1;
+        minIndex < 0 ? (minIndex = 0) : null;
+      }
+      setSelectedMin(possibleValues[minIndex]);
+      // setMinBulletPosition(minIndex * stepLength);
+      setMinBulletPosition(calculatePosition(minIndex));
     },
-    [posibleValues, stepLength, calculateStepForMovement]
+    [
+      possibleValues,
+      stepLength,
+      stepLengths,
+      selectedMax,
+      calculateStepForMovement,
+      setMinBulletPosition,
+      calculatePosition,
+    ]
   );
 
   /**
@@ -129,11 +237,26 @@ export function Range(props) {
   const setMaxValues = useCallback(
     (movement) => {
       const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
-      const maxIndex = calculateStepForMovement(movement);
-      setSelectedMax(posibleValues[maxIndex]);
-      setMaxBulletPosition(maxIndex * stepLength);
+      let maxIndex = calculateStepForMovement(movement);
+      if (selectedMin && possibleValues[maxIndex] <= selectedMin) {
+        maxIndex += 1;
+        maxIndex > possibleValues.length - 1
+          ? (maxIndex = possibleValues.length - 1)
+          : null;
+      }
+      setSelectedMax(possibleValues[maxIndex]);
+      // setMaxBulletPosition(maxIndex * stepLength);
+      setMaxBulletPosition(calculatePosition(maxIndex));
     },
-    [posibleValues, stepLength, calculateStepForMovement]
+    [
+      possibleValues,
+      stepLength,
+      stepLengths,
+      selectedMin,
+      calculateStepForMovement,
+      setMaxBulletPosition,
+      calculatePosition,
+    ]
   );
 
   /**
@@ -143,7 +266,7 @@ export function Range(props) {
     const lineBoundingClientRect = rangeLine.current?.getBoundingClientRect();
     setMinValues(0);
     setMaxValues(lineBoundingClientRect.width);
-  }, [stepLength, posibleValues]);
+  }, [stepLength, stepLengths, possibleValues]);
 
   /**
    * Listen to mouse up and mouse move events to move the bullets and "drop" them.
@@ -248,19 +371,23 @@ export function Range(props) {
    */
   const goPreviousValue = useCallback(
     (bullet) => {
+      let selectedMinIndex = possibleValues.findIndex((x) => x === selectedMin);
+      let selectedMaxIndex = possibleValues.findIndex((x) => x === selectedMax);
+
       if (bullet === "min-bullet") {
-        let index = posibleValues.findIndex((x) => x === selectedMin);
+        let index = selectedMinIndex;
         index = index - 1 < 0 ? 0 : index - 1;
-        setSelectedMin(posibleValues[index]);
-        setMinBulletPosition(index * stepLength);
+        setSelectedMin(possibleValues[index]);
+        setMinBulletPosition(calculatePosition(index));
       } else if (bullet === "max-bullet") {
-        let index = posibleValues.findIndex((x) => x === selectedMax);
+        let index = selectedMaxIndex;
         index = index - 1 < 0 ? 0 : index - 1;
-        setSelectedMax(posibleValues[index]);
-        setMaxBulletPosition(index * stepLength);
+        index <= selectedMinIndex ? (index = selectedMinIndex + 1) : null;
+        setSelectedMax(possibleValues[index]);
+        setMaxBulletPosition(calculatePosition(index));
       }
     },
-    [posibleValues, selectedMin]
+    [possibleValues, selectedMin, selectedMax, calculatePosition]
   );
 
   /**
@@ -270,25 +397,34 @@ export function Range(props) {
    */
   const goNextValue = useCallback(
     (bullet) => {
+      let selectedMinIndex = possibleValues.findIndex((x) => x === selectedMin);
+      let selectedMaxIndex = possibleValues.findIndex((x) => x === selectedMax);
+
       if (bullet === "min-bullet") {
-        let index = posibleValues.findIndex((x) => x === selectedMin);
+        let index = selectedMinIndex;
         index =
-          index + 1 > posibleValues.length - 1
-            ? posibleValues.length - 1
+          index + 1 > possibleValues.length - 1
+            ? possibleValues.length - 1
             : index + 1;
-        setSelectedMin(posibleValues[index]);
-        setMinBulletPosition(index * stepLength);
+
+        index >= selectedMaxIndex ? (index = selectedMaxIndex - 1) : null;
+
+        setSelectedMin(possibleValues[index]);
+        setMinBulletPosition(calculatePosition(index));
       } else if (bullet === "max-bullet") {
-        let index = posibleValues.findIndex((x) => x === selectedMax);
+        let index = selectedMaxIndex;
         index =
-          index + 1 > posibleValues.length - 1
-            ? posibleValues.length - 1
+          index + 1 > possibleValues.length - 1
+            ? possibleValues.length - 1
             : index + 1;
-        setSelectedMax(posibleValues[index]);
-        setMaxBulletPosition(index * stepLength);
+        if (index <= selectedMinIndex) {
+          index = selectedMinIndex + 1;
+        }
+        setSelectedMax(possibleValues[index]);
+        setMaxBulletPosition(calculatePosition(index));
       }
     },
-    [posibleValues, selectedMin, stepLength]
+    [possibleValues, selectedMin, selectedMax, stepLength]
   );
 
   /**
@@ -308,18 +444,18 @@ export function Range(props) {
   /**
    * Calculates all the steps between the min and max values.
    */
-  const calculateSteps = useCallback(() => {
-    const range = max - min;
-    const numberOfSteps = Math.floor(range / step);
-    const posibleValues = [+min];
+  const calculateSteps = useCallback((minValue, maxValue, stepValue) => {
+    const range = maxValue - minValue;
+    const numberOfSteps = Math.floor(range / stepValue);
+    const calculatedPossibleValues = [+minValue];
     for (let i = 1; i <= numberOfSteps; i++) {
-      posibleValues.push(+min + i * step);
+      calculatedPossibleValues.push(+minValue + i * stepValue);
     }
-    if (range / step - Math.floor(range / step) > 0) {
-      posibleValues.push(+max);
+    if (range / stepValue - Math.floor(range / stepValue) > 0) {
+      calculatedPossibleValues.push(+maxValue);
     }
-    return posibleValues;
-  }, [min, max, step]);
+    return calculatedPossibleValues;
+  }, []);
 
   /**
    * Controls the new min input.
@@ -464,27 +600,35 @@ export function Range(props) {
             <div
               className="step"
               style={{
-                width: `${0}px`,
+                width: `${stepLengths[0]}px`,
               }}
             >
               {showStepLabels && (
-                <span className="step-number">{posibleValues[0]}</span>
+                <span className="step-number">
+                  {props.config.currencyMode
+                    ? useCurrency(possibleValues[0])
+                    : possibleValues[0]}
+                </span>
               )}
             </div>
           )}
           {showStepTicks &&
-            posibleValues.map((val, i) => {
+            possibleValues.map((val, i) => {
               return (
                 i > 0 && (
                   <div
                     key={i}
                     className="step"
                     style={{
-                      width: `${stepLength}px`,
+                      width: `${stepLengths[i]}px`,
                     }}
                   >
                     {showStepLabels && (
-                      <span className="step-number">{posibleValues[i]}</span>
+                      <span className="step-number">
+                        {props.config.currencyMode
+                          ? useCurrency(possibleValues[i])
+                          : possibleValues[i]}
+                      </span>
                     )}
                   </div>
                 )
