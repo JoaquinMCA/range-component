@@ -77,6 +77,9 @@ describe("Range component", () => {
     test("Renders to bullets with the initial min and max selected", async () => {
       // const {rangeComponent, minInput, maxInput} = setup(config1);
     });
+    test("Min max are labels, not inputs", async () => {
+      // const {rangeComponent, minInput, maxInput} = setup(config1);
+    });
   });
   // TODO e2e mover las bullet (con drag and drop),
 });
