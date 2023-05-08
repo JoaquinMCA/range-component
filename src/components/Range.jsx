@@ -399,6 +399,7 @@ export function Range(props) {
     <div className="range-container" ref={rangeContainer}>
       <div className="min-max-container">
         <input
+          id="min"
           type="number"
           step={step}
           onChange={minInputHandler}
@@ -494,6 +495,7 @@ export function Range(props) {
 
       <div className="min-max-container">
         <input
+          id="max"
           type="number"
           step={step}
           onChange={maxInputHandler}
