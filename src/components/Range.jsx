@@ -544,7 +544,7 @@ export function Range(props) {
           />
         )}
         {!minMaxVariable && (
-          <label className="min-max-label">
+          <label className="min-max-label" id="min-label">
             {props.config.currencyMode ? useCurrency(min) : min}
           </label>
         )}
@@ -655,7 +655,7 @@ export function Range(props) {
           />
         )}
         {!minMaxVariable && (
-          <label className="min-max-label">
+          <label className="min-max-label" id="max-label">
             {props.config.currencyMode ? useCurrency(max) : max}
           </label>
         )}
