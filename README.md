@@ -44,7 +44,7 @@ Provide a localhost:8080/exercise2 route with the following:
 - Given a range of values: [1.99, 5.99, 10.99, 30.99, 50.99, 70.99] the user will only
   be able to select those values in range
 - Provide a mocked http service that returns the array of numbers: [1.99, 5.99,
-  10.99, 30.99, 50.99, 70.99]. Use h ttps://www.mockable.io/ or a custom mocked
+  10.99, 30.99, 50.99, 70.99]. Use https://www.mockable.io/ or a custom mocked
   server.
 - For this type of range, currency values are not input changable. They have to be
   only a label
@@ -58,7 +58,7 @@ Provide a localhost:8080/exercise2 route with the following:
 
 The component accepts an object prop called `config` witch which we can configure some parameters:
 
-- `min - max`: minimum and maximum values. The possible values will be automatically generated using the `step` parameter. Have to be set in order to use the component as a **normal range**.
+- `min` and `max`: minimum and maximum values. The possible values between them will be automatically generated using the `step` parameter. Have to be set in order to use the component as a **normal range**.
 - `step`: distance between possible values.
 - `values`: array of possible values. No more possible values are added between them. Have to be set in order to use the component as a **fixed values range**.
 - `currencyMode`: Shows the values as currency (e.g. 1,00€) and sets the `step` to 0,01.
@@ -68,6 +68,13 @@ The component accepts an object prop called `config` witch which we can configur
 - `showStepLabels`: Shows little labels above the possible values. Not recommended with normal ranges with little step or with `currencyMode` active.
 
 NOTE: either `min` and `max` or `values` have to be set, otherwise the component will throw an error.
+
+## Other information
+As well as dragging the bullets the min and max values can be set using the arrow keys.
+
+In order to be able to use the arrow keys a bullet has to be dragged first and them we can use the left and bottom arrows to go to the previous possible value and the right and up arrows to go to the next possible value.
+
+Note: if the mouse leaves the component the arrow keys are disabled to avoid problems with other components which use them (for example if you have to use more than one range component simultaneously).
 
 ## Available Scripts
 
