@@ -17,6 +17,18 @@
   width: 100%;
 }
 
+.min-max-label {
+  width: 100%;
+}
+
+.min-max-label:first-of-type {
+  text-align: end;
+}
+
+.min-max-label:first-of-type {
+  text-align: start;
+}
+
 .bullet-value {
   position: absolute;
   bottom: -18px;

@@ -11,6 +11,14 @@ describe("Range component", () => {
     step: 1,
   };
 
+  const config2 = {
+    values: [1.99,5.99,10.99,30.99,50.99,70.99],
+    showStepTicks: false,
+    currencyMode: true,
+    showStepTicks: true,
+    showStepLabels: true,
+  };
+
   const setup = (config) => {
     const rangeComponent = render(<Range config={config}></Range>);
     const minInput = rangeComponent.container.querySelector("#min");
@@ -39,7 +47,7 @@ describe("Range component", () => {
     });
 
     test("If no min, max or values are passed inside config, check error", async () => {
-      const errorSpy = vi.spyOn(console, "error");  
+      const errorSpy = vi.spyOn(console, "error");
       const { leftBullet, rightBullet } = setup({});
       expect(errorSpy).toHaveBeenCalledWith(
         "Either min and max or values have to be passed as part of the config."
@@ -73,7 +81,7 @@ describe("Range component", () => {
 
   describe("Range component, min - max mode", () => {
     test("Renders to bullets with the initial min and max selected", async () => {
-      // const {rangeComponent, minInput, maxInput} = setup(config1);
+      const {rangeComponent, minInput, maxInput} = setup(config2);
     });
     test("Min max are labels, not inputs", async () => {
       // const {rangeComponent, minInput, maxInput} = setup(config1);

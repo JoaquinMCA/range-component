@@ -534,13 +534,20 @@ export function Range(props) {
   return (
     <div className="range-container" ref={rangeContainer}>
       <div className="min-max-container">
-        <input
-          id="min"
-          type="number"
-          step={step}
-          onChange={minInputHandler}
-          value={min}
-        />
+        {minMaxVariable && (
+          <input
+            id="min"
+            type="number"
+            step={step}
+            onChange={minInputHandler}
+            value={min}
+          />
+        )}
+        {!minMaxVariable && (
+          <label className="min-max-label">
+            {props.config.currencyMode ? useCurrency(min) : min}
+          </label>
+        )}
       </div>
 
       <div className="range-line-container">
@@ -638,13 +645,20 @@ export function Range(props) {
       </div>
 
       <div className="min-max-container">
-        <input
-          id="max"
-          type="number"
-          step={step}
-          onChange={maxInputHandler}
-          value={max}
-        />
+        {minMaxVariable && (
+          <input
+            id="max"
+            type="number"
+            step={step}
+            onChange={maxInputHandler}
+            value={max}
+          />
+        )}
+        {!minMaxVariable && (
+          <label className="min-max-label">
+            {props.config.currencyMode ? useCurrency(max) : max}
+          </label>
+        )}
       </div>
     </div>
   );
