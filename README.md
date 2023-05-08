@@ -70,11 +70,26 @@ The component accepts an object prop called `config` witch which we can configur
 NOTE: either `min` and `max` or `values` have to be set, otherwise the component will throw an error.
 
 ## Other information
+
 As well as dragging the bullets the min and max values can be set using the arrow keys.
 
 In order to be able to use the arrow keys a bullet has to be dragged first and them we can use the left and bottom arrows to go to the previous possible value and the right and up arrows to go to the next possible value.
 
 Note: if the mouse leaves the component the arrow keys are disabled to avoid problems with other components which use them (for example if you have to use more than one range component simultaneously).
+
+## Examples
+
+- Normal range currency:
+
+<img src="./src/assets/Normal range currency.png" height="84px" alt="Normal range currency">
+
+- Normal range currency:
+
+<img src="./src/assets/Normal range no currency.png" height="100px" alt="Normal range no currency">
+
+- Normal range currency:
+
+<img src="./src/assets/Fixed values range with step ticks and labels.png" height="100px" alt="Fixed values range with step ticks and labels">
 
 ## Available Scripts
 

@@ -535,16 +535,24 @@ export function Range(props) {
     <div className="range-container" ref={rangeContainer}>
       <div className="min-max-container">
         {minMaxVariable && (
-          <input
-            id="min"
-            type="number"
-            step={step}
-            onChange={minInputHandler}
-            value={min}
-          />
+          <span className="input-container">
+            <input
+              id="min"
+              type="number"
+              className="min-text"
+              step={step}
+              onChange={minInputHandler}
+              value={parseFloat(min).toFixed(2)}
+            />
+            {props.config.currencyMode ? (
+              <span className="currency-symbol">€</span>
+            ) : (
+              ""
+            )}
+          </span>
         )}
         {!minMaxVariable && (
-          <label className="min-max-label" id="min-label">
+          <label className="min-max-label min-text" id="min-label">
             {props.config.currencyMode ? useCurrency(min) : min}
           </label>
         )}
@@ -646,16 +654,24 @@ export function Range(props) {
 
       <div className="min-max-container">
         {minMaxVariable && (
-          <input
-            id="max"
-            type="number"
-            step={step}
-            onChange={maxInputHandler}
-            value={max}
-          />
+          <span className="input-container">
+            <input
+              id="max"
+              type="number"
+              className="max-text"
+              step={step}
+              onChange={maxInputHandler}
+              value={parseFloat(max).toFixed(2)}
+            />
+            {props.config.currencyMode ? (
+              <span className="currency-symbol">€</span>
+            ) : (
+              ""
+            )}
+          </span>
         )}
         {!minMaxVariable && (
-          <label className="min-max-label" id="max-label">
+          <label className="min-max-label max-text" id="max-label">
             {props.config.currencyMode ? useCurrency(max) : max}
           </label>
         )}

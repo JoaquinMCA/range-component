@@ -9,24 +9,44 @@
 }
 
 .min-max-container {
-  width: 100px;
+  width: 80px;
   display: flex;
 }
 
-.min-max-container > input {
+.input-container {
+  display: flex;
+  position: relative;
+}
+
+.min-max-container > span > input {
   width: 100%;
+  border: none;
+  padding-right: 6px;
+  z-index: 1;
+  background-color: transparent;
+}
+
+.currency-symbol {
+  position: absolute;
+  right: 6px;
+  bottom: 0px;
+  z-index: 0;
+}
+
+.min-max-container > input::after {
+  content: "€";
 }
 
 .min-max-label {
   width: 100%;
 }
 
-.min-max-label:first-of-type {
+.min-text {
   text-align: end;
 }
 
-.min-max-label:first-of-type {
-  text-align: start;
+.max-text {
+  text-align: end;
 }
 
 .bullet-value {

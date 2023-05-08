@@ -72,9 +72,9 @@ describe("Range component", () => {
 
     test("Change min input", async () => {
       const { minInput, maxInput, minLabel, maxLabel } = setup(config1);
-      expect(minInput.value).toBe("1");
+      expect(minInput.value).toBe("1.00");
       fireEvent.change(minInput, { target: { value: "8" } });
-      expect(minInput.value).toBe("8");
+      expect(minInput.value).toBe("8.00");
 
       // Check that min can not be greater than max (10) and it's value is set automatically to max-1
       fireEvent.change(minInput, { target: { value: +maxInput.value + 1 } });
@@ -88,9 +88,9 @@ describe("Range component", () => {
 
     test("Change max input", async () => {
       const { minInput, maxInput, minLabel, maxLabel } = setup(config1);
-      expect(maxInput.value).toBe("100");
+      expect(maxInput.value).toBe("100.00");
       fireEvent.change(maxInput, { target: { value: "23" } });
-      expect(maxInput.value).toBe("23");
+      expect(maxInput.value).toBe("23.00");
 
       // Check that max can not be smaller than min (1) and it's value is set automatically to min+1
       fireEvent.change(maxInput, { target: { value: +minInput.value - 1 } });
