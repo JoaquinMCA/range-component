@@ -86,7 +86,7 @@ export function Range(props) {
     }
 
     if (props.config.step) {
-      setStep(props.config.step);
+      setStep(props.config.currencyMode ? +0.01 : props.config.step);
     } else {
       setStep(props.config.currencyMode ? +0.01 : +1);
     }
