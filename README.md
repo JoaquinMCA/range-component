@@ -83,7 +83,7 @@ Note: if the mouse leaves the component the arrow keys are disabled to avoid pro
 
 <img src="./src/assets/Normal range currency.png" height="84px" alt="Normal range currency">
 
-- Normal range currency:
+- Normal range:
 
 <img src="./src/assets/Normal range no currency.png" height="100px" alt="Normal range no currency">
 
