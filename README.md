@@ -87,7 +87,7 @@ Note: if the mouse leaves the component the arrow keys are disabled to avoid pro
 
 <img src="./src/assets/Normal range no currency.png" height="100px" alt="Normal range no currency">
 
-- Normal range currency:
+- Fixed values range with step ticks and labels:
 
 <img src="./src/assets/Fixed values range with step ticks and labels.png" height="100px" alt="Fixed values range with step ticks and labels">
 
